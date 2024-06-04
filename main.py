@@ -1,6 +1,6 @@
 import time
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import split
+from pyspark.sql.functions import split, regexp_replace, when
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DateType
 
 spark = SparkSession \
@@ -57,5 +57,16 @@ union_df = union_df.drop('age_sexe')
 
 union_df.printSchema()
 union_df.show()
+
+distinctValuesDF = union_df.select("sexe").distinct().show()
+union_df = union_df.withColumn("sexe",
+                               when(union_df.sexe == "m", "M")
+                               .when(union_df.sexe == "f", "F")
+                               .when(union_df.sexe == "H", "M")
+                               .otherwise(union_df.sexe)
+                               )
+
+distinctValuesDF = union_df.select("sexe").distinct().show()
+
 
 # time.sleep(100000)

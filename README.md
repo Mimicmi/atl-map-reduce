@@ -23,3 +23,24 @@ union_df = union_df.withColumn("age", age_sexe_df.getItem(0).cast("integer"))
 union_df = union_df.withColumn("sexe", age_sexe_df.getItem(1).cast("string"))
 
 Cela va nous créer la nouvelle colonne avec les valeurs récupérés du split
+
+# Harmoniser les données :
+
+On regarde les valeurs différentes en faisant :
+
+distinctValuesDF = union_df.select("sexe").distinct().show()
+On obtient : F, M, H, m, f
+On va garder uniquement: F, M
+
+Je fais alors :
+
+union_df = union_df.withColumn("sexe",
+when(union_df.sexe == "m", "M")
+.when(union_df.sexe == "f", "F")
+.when(union_df.sexe == "H", "M")
+.otherwise(union_df.sexe)
+)
+
+distinctValuesDF = union_df.select("sexe").distinct().show()
+
+Alors je n'aurai plus que "F, M" comme valeurs
