@@ -1,4 +1,6 @@
+import time
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import split
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DateType
 
 spark = SparkSession \
@@ -11,6 +13,7 @@ spark = SparkSession \
 PATH_1 = "Archive/applications_activity_per_user_per_hour_1.csv"
 PATH_2 = "Archive/applications_activity_per_user_per_hour_2.csv"
 
+# 5 - 1 : Lecture des données
 
 # Create schema
 schema = StructType([
@@ -28,17 +31,29 @@ schema = StructType([
 df_1 = spark.read.format("csv").schema(
     schema).option("header", True).load(PATH_1)
 
-df_1.printSchema()
-df_1.show()
+# df_1.printSchema()
+# df_1.show()
 
 # Create 2nd DF with schema
 df_2 = spark.read.format("csv").schema(
     schema).option("header", True).load(PATH_2)
 
-df_2.printSchema()
-df_2.show()
+# df_2.printSchema()
+# df_2.show()
 
 # Union of the two DF
 union_df = df_1.union(df_2)
 
+# union_df.show()
+
+# 5 - 2 : Nettoyage des données
+# Séparation age_sexe en 2 colonnes
+age_sexe_df = split(union_df["age_sexe"], "-")
+
+union_df = union_df.withColumn("age", age_sexe_df.getItem(0))
+union_df = union_df.withColumn("sexe", age_sexe_df.getItem(1))
+union_df = union_df.drop('age_sexe')
+
 union_df.show()
+
+# time.sleep(100000)
