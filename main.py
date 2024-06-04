@@ -1,6 +1,6 @@
 import time
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import split, when, avg, mean
+from pyspark.sql.functions import split, when, avg, mean, broadcast
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DateType
 
 spark = SparkSession \
@@ -95,8 +95,8 @@ schema2 = StructType([
 df_3 = spark.read.format("csv").schema(
     schema2).option("header", True).load(PATH_3)
 
-# Join union_df_agg with the new csv
-new_union = union_df_agg.join(df_3, on="application", how="left")
+# Join union_df_agg with the new csv with broadcast of newer csv as it's a little dataframe
+new_union = union_df_agg.join(broadcast(df_3), on="application", how="left")
 
 new_union.show()
 
