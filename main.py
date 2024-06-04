@@ -115,7 +115,9 @@ union = union_df.join(
 
 # 5-3.1 : Comparaison par tranche d’âge
 union_agg_age_df = union_agg
-union_agg_age_df.show()
+
+union_agg_age_df = union_agg_age_df.groupBy("timestamp", "age").agg(
+    mean("mean-time-spent").alias("value"))
 
 union_agg_age_df = union_agg_age_df.withColumn(
     "variable",
@@ -125,9 +127,6 @@ union_agg_age_df = union_agg_age_df.withColumn(
     .when((union_agg_age_df.age >= 36) & (union_agg_age_df.age <= 45), "35-45 ans")
     .when(union_agg_age_df.age > 45, "plus de 45 ans")
 )
-
-union_agg_age_df = union_agg_age_df.groupBy("timestamp", "age").agg(
-    mean("mean-time-spent").alias("value"))
 
 union_agg_age_df = union_agg_age_df.withColumn("criterion", when(
     union_agg_age_df.variable.endswith("ans"), "age").otherwise(union_agg_age_df.variable))
