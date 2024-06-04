@@ -79,7 +79,25 @@ union_df_agg = union_df.groupBy("timestamp", "sexe", "age", "application").agg(
         "mean-times-opened-after-notifications")
 )
 
-union_df_agg.show()
+# union_df_agg.show()
 union_df_agg.printSchema()
+
+
+# Adding new path for new csv applications_categories & new schema
+PATH_3 = "Archive/applications_categories.csv"
+
+schema2 = StructType([
+    StructField("application", StringType()),
+    StructField("category", StringType()),
+])
+
+# Creating new dataframes from applications_categories.csv
+df_3 = spark.read.format("csv").schema(
+    schema2).option("header", True).load(PATH_3)
+
+# Join union_df_agg with the new csv
+new_union = union_df_agg.join(df_3, on="application", how="left")
+
+new_union.show()
 
 # time.sleep(100000)
