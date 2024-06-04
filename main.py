@@ -103,10 +103,26 @@ union_agg = union_df_agg.join(broadcast(df_3), on="application", how="left")
 union = union_df.join(
     broadcast(df_3), on="application", how="left")
 
-union.show()
+#union.show()
 
 
 # 5-3.1 : Comparaison par tranche d’âge
 
+# 5-3.2 : Comparaison par sexe
+union_agg_day_sexe = union.groupBy("timestamp", "sexe").agg(
+    mean("time_spent").alias("value"))
 
+union_agg_day_sexe = union_agg_day_sexe.orderBy("timestamp", "sexe")
+
+union_agg_day_sexe = union_agg_day_sexe.withColumn(
+    "variable", union_agg_day_sexe.sexe)
+union_agg_day_sexe = union_agg_day_sexe.withColumnRenamed(
+    "sexe", "criterion")
+union_agg_day_sexe = union_agg_day_sexe.withColumn("criterion", when(
+    union_agg_day_sexe.variable == union_agg_day_sexe.criterion, "sexe").otherwise(union_agg_day_sexe.variable))
+
+union_agg_day_sexe = union_agg_day_sexe.select(
+    "timestamp", "criterion", "variable", "value")
+
+union_agg_day_sexe.show()
 # time.sleep(100000)
