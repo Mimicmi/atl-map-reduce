@@ -1,6 +1,6 @@
 import time
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import split, regexp_replace, when
+from pyspark.sql.functions import split, when, avg, mean
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DateType
 
 spark = SparkSession \
@@ -17,7 +17,7 @@ PATH_2 = "Archive/applications_activity_per_user_per_hour_2.csv"
 
 # Create schema
 schema = StructType([
-    StructField("timestamp", DateType()),
+    StructField("timestamp", StringType()),
     StructField("user_id", IntegerType()),
     StructField("age_sexe", StringType()),
     StructField("application", StringType()),
@@ -58,7 +58,9 @@ union_df = union_df.drop('age_sexe')
 union_df.printSchema()
 union_df.show()
 
-distinctValuesDF = union_df.select("sexe").distinct().show()
+# distinctValuesDF = union_df.select("sexe").distinct().show()
+
+# Harmonisation des données de la colonne Sexe
 union_df = union_df.withColumn("sexe",
                                when(union_df.sexe == "m", "M")
                                .when(union_df.sexe == "f", "F")
@@ -66,7 +68,17 @@ union_df = union_df.withColumn("sexe",
                                .otherwise(union_df.sexe)
                                )
 
-distinctValuesDF = union_df.select("sexe").distinct().show()
+# distinctValuesDF = union_df.select("sexe").distinct().show()
 
+# Agrégation des colonnes : date/sexe/age/application
+union_df_agg = union_df.groupBy("timestamp", "sexe", "age", "application").agg(
+    mean("time_spent").alias("mean-time-spent"),
+    mean("times_opened").alias("mean-times-openend"),
+    mean("notifications_received").alias("mean-notifications-received"),
+    mean("times_opened_after_notification").alias(
+        "mean-times-opened-after-notifications")
+)
+
+union_df_agg.show()
 
 # time.sleep(100000)
