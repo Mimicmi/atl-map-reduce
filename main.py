@@ -136,6 +136,22 @@ union_agg_age_df = union_agg_age_df.select(
 union_agg_age_df.show()
 
 # 5-3.2 : Comparaison par sexe
+union_agg_day_sexe = union.groupBy("timestamp", "sexe").agg(
+    mean("time_spent").alias("value"))
+
+union_agg_day_sexe = union_agg_day_sexe.orderBy("timestamp", "sexe")
+
+union_agg_day_sexe = union_agg_day_sexe.withColumn(
+    "variable", union_agg_day_sexe.sexe)
+union_agg_day_sexe = union_agg_day_sexe.withColumnRenamed(
+    "sexe", "criterion")
+union_agg_day_sexe = union_agg_day_sexe.withColumn("criterion", when(
+    union_agg_day_sexe.variable == union_agg_day_sexe.criterion, "sexe").otherwise(union_agg_day_sexe.variable))
+
+union_agg_day_sexe = union_agg_day_sexe.select(
+    "timestamp", "criterion", "variable", "value")
+
+union_agg_day_sexe.show()
 
 # 5-3.3 : Comparaison par catégorie
 union_agg_category = union_agg.groupBy(
