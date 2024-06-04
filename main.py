@@ -50,10 +50,12 @@ union_df = df_1.union(df_2)
 # Séparation age_sexe en 2 colonnes
 age_sexe_df = split(union_df["age_sexe"], "-")
 
-union_df = union_df.withColumn("age", age_sexe_df.getItem(0))
-union_df = union_df.withColumn("sexe", age_sexe_df.getItem(1))
+union_df = union_df.withColumn("age", age_sexe_df.getItem(0).cast("integer"))
+union_df = union_df.withColumn("sexe", age_sexe_df.getItem(1).cast("string"))
 union_df = union_df.drop('age_sexe')
 
+
+union_df.printSchema()
 union_df.show()
 
 # time.sleep(100000)
