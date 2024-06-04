@@ -17,7 +17,7 @@ PATH_2 = "Archive/applications_activity_per_user_per_hour_2.csv"
 
 # Create schema
 schema = StructType([
-    StructField("timestamp", StringType()),
+    StructField("timestamp", DateType()),
     StructField("user_id", IntegerType()),
     StructField("age_sexe", StringType()),
     StructField("application", StringType()),
@@ -80,5 +80,6 @@ union_df_agg = union_df.groupBy("timestamp", "sexe", "age", "application").agg(
 )
 
 union_df_agg.show()
+union_df_agg.printSchema()
 
 # time.sleep(100000)

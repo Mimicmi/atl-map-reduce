@@ -44,3 +44,29 @@ when(union_df.sexe == "m", "M")
 distinctValuesDF = union_df.select("sexe").distinct().show()
 
 Alors je n'aurai plus que "F, M" comme valeurs
+
+# Faire les aggréagations sur date / sexe / âge / application :
+
+union_df_agg = union_df.groupBy("timestamp", "sexe", "age", "application").agg(
+mean("time_spent").alias("mean-time-spent"),
+mean("times_opened").alias("mean-times-openend"),
+mean("notifications_received").alias("mean-notifications-received"),
+mean("times_opened_after_notification").alias(
+"mean-times-opened-after-notifications")
+)
+
+union_df_agg.show()
+
+# Quels sont les types des nouvelles colonnes ?
+
+union_df_agg.printSchema()
+
+root
+|-- timestamp: date (nullable = true)
+|-- sexe: string (nullable = true)
+|-- age: integer (nullable = true)
+|-- application: string (nullable = true)
+|-- mean-time-spent: double (nullable = true)
+|-- mean-times-openend: double (nullable = true)
+|-- mean-notifications-received: double (nullable = true)
+|-- mean-times-opened-after-notifications: double (nullable = true)
