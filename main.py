@@ -103,10 +103,16 @@ union_agg = union_df_agg.join(broadcast(df_3), on="application", how="left")
 union = union_df.join(
     broadcast(df_3), on="application", how="left")
 
-union.show()
-
+# union.show()
 
 # 5-3.1 : Comparaison par tranche d’âge
 
+# 5-3.2 : Comparaison par sexe
+
+# 5-3.3 : Comparaison par catégorie
+union_agg_category = union_agg.groupBy(
+    "timestamp", "category").agg(mean("mean-time-spent").alias("value")).withColumnRenamed("category", "criterion")
+
+# union_agg_category.show()
 
 # time.sleep(100000)
