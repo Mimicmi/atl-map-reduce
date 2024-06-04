@@ -96,8 +96,17 @@ df_3 = spark.read.format("csv").schema(
     schema2).option("header", True).load(PATH_3)
 
 # Join union_df_agg with the new csv with broadcast of newer csv as it's a little dataframe
-new_union = union_df_agg.join(broadcast(df_3), on="application", how="left")
+union_agg = union_df_agg.join(broadcast(df_3), on="application", how="left")
 
-new_union.show()
+# new_union.show()
+
+union = union_df.join(
+    broadcast(df_3), on="application", how="left")
+
+union.show()
+
+
+# 5-3.1 : Comparaison par tranche d’âge
+
 
 # time.sleep(100000)
