@@ -12,7 +12,6 @@ PATH_1 = "Archive/applications_activity_per_user_per_hour_1.csv"
 PATH_2 = "Archive/applications_activity_per_user_per_hour_2.csv"
 
 # Etapes 5 - 5-1 Read CSV
-# df_1 = spark.read.csv(PATH_1, header=True)
 
 schema = StructType([
     StructField("timestamp", DateType()),
@@ -31,5 +30,8 @@ df_1 = spark.read.format("csv").schema(
 df_1.printSchema()
 df_1.show()
 
-# df_2 = spark.read.csv(PATH_2, header=True)
-# df_2.show()
+df_2 = spark.read.format("csv").schema(
+    schema).option("header", True).load(PATH_2)
+
+df_2.printSchema()
+df_2.show()
