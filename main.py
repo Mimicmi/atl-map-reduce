@@ -1,4 +1,3 @@
-import time
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import split, when, avg, mean, broadcast, from_utc_timestamp, lag, col, to_date
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, TimestampType
@@ -44,7 +43,7 @@ df_2 = spark.read.format("csv").schema(
 
 # Union of the two DF
 union_df = df_1.union(df_2)
-union_df.cache()
+union_df = union_df.cache()
 # union_df.show()
 
 # 5 - 2 : Nettoyage des données
@@ -98,7 +97,7 @@ df_3 = spark.read.format("csv").schema(
 
 # Join union_df_agg with the new csv with broadcast of newer csv as it's a little dataframe
 union_agg = union_df_agg.join(broadcast(df_3), on="application", how="left")
-union_agg.cache()
+union_agg = union_agg.cache()
 # new_union.show()
 
 union = union_df.join(
@@ -122,7 +121,7 @@ union_agg_age_df = union_agg
 union_agg_age_df = union_agg_age_df.groupBy("timestamp", "age").agg(
     mean("mean-time-spent").alias("value"))
 
-union_agg_age_df.cache()
+union_agg_age_df = union_agg_age_df.cache()
 
 union_agg_age_df = union_agg_age_df.withColumn(
     "variable",
@@ -144,7 +143,7 @@ union_agg_age_df = union_agg_age_df.select(
 union_agg_day_sexe = union_agg.groupBy("timestamp", "sexe").agg(
     mean("mean-time-spent").alias("value"))
 
-union_agg_day_sexe.cache()
+union_agg_day_sexe = union_agg_day_sexe.cache()
 
 union_agg_day_sexe = union_agg_day_sexe.orderBy("timestamp", "sexe")
 
@@ -164,7 +163,7 @@ union_agg_day_sexe = union_agg_day_sexe.select(
 union_agg_category = union_agg.groupBy(
     "timestamp", "category").agg(mean("mean-time-spent").alias("value"))
 
-union_agg_category.cache()
+union_agg_category = union_agg_category.cache()
 
 union_agg_category = union_agg_category.withColumn(
     "variable", union_agg_category.category)
@@ -182,7 +181,7 @@ union_agg_category = union_agg_category.select(
 combined_df = union_agg_age_df.union(
     union_agg_day_sexe).union(union_agg_category)
 
-combined_df.show()
+# combined_df.show()
 
 # 5-3.4 Calcul de l’indice
 windowSpec = Window.partitionBy("criterion", "variable").orderBy(
@@ -198,7 +197,7 @@ window_moving_avg = Window.orderBy(col("timestamp")).rowsBetween(-4, 0)
 window_average_df = window_df.withColumn(
     "moving_avg", avg(col("index")).over(window_moving_avg))
 
-# window_average_df.orderBy("timestamp", ascending=False).show()
+window_average_df.orderBy("timestamp", ascending=False).show()
 
 # 5.4 Stockage du résultat
 # Save to parquet
