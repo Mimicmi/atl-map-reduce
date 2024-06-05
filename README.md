@@ -1,48 +1,36 @@
-**5 Etapes**
-============
+# **5 Etapes**
 
-**5.1 Lecture des données**
----------------------------
+## **5.1 Lecture des données**
 
 **Quelle est la différence entre l’utilisation d’un schéma figé lors de la lecture des données et l’utilisation de l’option inferSchema de spark ?**
 
-*   Schéma figé: Rapide, précis mais inflexible (définition manuelle requise).
-    
-*   inferSchema: Flexible, s'adapte aux changements (analyse des données plus lente, inférence parfois imprécise).
-    
+-   Schéma figé: Rapide, précis mais inflexible (définition manuelle requise).
+-   inferSchema: Flexible, s'adapte aux changements (analyse des données plus lente, inférence parfois imprécise).
 
-****Quels sont les avantages et les inconvénients de chaque approche ?****
+\***\*Quels sont les avantages et les inconvénients de chaque approche ?\*\***
 
 **Schéma figé**
 
 Avantages
 
-*   Performances : la définition explicite du schéma peut améliorer considérablement les performances, car Spark n'a pas besoin d'analyser l'intégralité de l'ensemble de données pour déduire le schéma.
-    
-*   Qualité des données : on contrôle la définition du schéma pour qu'il représente avec précision les données.
-    
+-   Performances : la définition explicite du schéma peut améliorer considérablement les performances, car Spark n'a pas besoin d'analyser l'intégralité de l'ensemble de données pour déduire le schéma.
+-   Qualité des données : on contrôle la définition du schéma pour qu'il représente avec précision les données.
 
 Les inconvénients
 
-*   Plus de temps et de code : demande plus de code pour définir le schéma, ce qui peut être long et compliqué pour des ensembles de données complexes ou lorsque le schéma évolue dans le temps.
-    
+-   Plus de temps et de code : demande plus de code pour définir le schéma, ce qui peut être long et compliqué pour des ensembles de données complexes ou lorsque le schéma évolue dans le temps.
 
 **inferSchema**
 Avantages
 
-*   Simplicité : Facile à utiliser, notamment pour une exploration rapide des données ou lorsque le schéma n'est pas connu à l'avance
-    
-*   Moins de code : pas besoin de spécifier manuellement le schéma, ce qui réduit la quantité de code à écrire
-    
+-   Simplicité : Facile à utiliser, notamment pour une exploration rapide des données ou lorsque le schéma n'est pas connu à l'avance
+-   Moins de code : pas besoin de spécifier manuellement le schéma, ce qui réduit la quantité de code à écrire
 
 Les inconvénients
 
-*   Frais généraux de performances : Spark doit analyser l'ensemble de données entier pour déduire le schéma, ce qui peut être coûteux en termes de calcul lorsqu’il y a beaucoup de données.
-    
-*   Qualité des données : l’inferSchema déduit des schémas incorrects si les données comportent des valeurs manquantes ou incohérentes.
-    
-*   Type Inference : l'inférence peut ne pas toujours identifier correctement les types de données des colonnes, ce qui entraîne des incompatibilités potentielles de types de données.
-    
+-   Frais généraux de performances : Spark doit analyser l'ensemble de données entier pour déduire le schéma, ce qui peut être coûteux en termes de calcul lorsqu’il y a beaucoup de données.
+-   Qualité des données : l’inferSchema déduit des schémas incorrects si les données comportent des valeurs manquantes ou incohérentes.
+-   Type Inference : l'inférence peut ne pas toujours identifier correctement les types de données des colonnes, ce qui entraîne des incompatibilités potentielles de types de données.
 
 **Est-ce que l’utilisation d’un schéma figé accélère l’exécution de la lecture des données ? Pourquoi ?**
 
@@ -50,7 +38,7 @@ Oui la définition d’un schéma figé peut améliorer considérablement les pe
 
 **5.2 Nettoyage des données**
 
-En faisant un "union\_df.printSchema()"
+En faisant un "union_df.printSchema()"
 
 Le résultat est le suivant :
 
@@ -79,6 +67,9 @@ Oui il est possible de changer le type de l'âge en le castant pendant la créat
 ```
 age\_sexe\_df = split(union\_df\["age\_sexe"\], "-")
 
+```
+age\_sexe\_df = split(union\_df\["age\_sexe"\], "-")
+
 union\_df = union\_df.withColumn("age", age\_sexe\_df.getItem(0).cast("integer"))
 
 union\_df = union\_df.withColumn("sexe", age\_sexe\_df.getItem(1).cast("string"))
@@ -88,6 +79,9 @@ Cela va nous créer la nouvelle colonne avec les valeurs récupérés du split
 **\# Harmoniser les données :**
 
 On regarde les valeurs différentes en faisant :
+```
+distinctValuesDF = union\_df.select("sexe").distinct().show()
+
 ```
 distinctValuesDF = union\_df.select("sexe").distinct().show()
 
@@ -111,9 +105,11 @@ when(union\_df.sexe == "m", "M")
 
 distinctValuesDF = union\_df.select("sexe").distinct().show()
 ```
+
 Alors je n'aurai plus que "F, M" comme valeurs
 
-Faire les aggréagations sur date / sexe / âge / application : 
+Faire les aggréagations sur date / sexe / âge / application :
+
 ```
 union\_df\_agg = union\_df.groupBy("timestamp", "sexe", "age", "application").agg(
 
@@ -156,16 +152,19 @@ root
 
 Les nouvelles colonnes sont automatiquements détectées comme des doubles vu que des “mean” ont été fait.
 ```
+
 **Quel type de jointure utiliser ? Quelle est la différence entre les types de jointures ?**
 
 On utilise la jointure gauche (Left Join), ça permet de conserver toutes les lignes de la table principale et d'ajouter les données de catégorie.
 
 De plus, nous avons fait un broadcast sur le petit dataframe pour les bon practice et gagner en performance.
+
 ```
 \# Adding new path for new csv applications\_categories & new schema
 
 PATH\_3 = "Archive/applications\_categories.csv"
 ```
+
 ```
 schema2 = StructType(\[
 
@@ -191,7 +190,8 @@ new\_union.show()
 
 Étant en France, nous allons utiliser le timezone Europe/Paris pour définir un jour. **Comment peut-on le faire en pyspark ? Peut-on configurer la session spark afin de le rendre plus facile ?**
 
-On peut dès le début dans notre schéma mettre la colonne “timestamp” au format “TimestampType” puis utiliser la fonction “from\\_utc\\_timestamp” pour lui mettre la bonne Timezone puis utiliser la fonction “to\\_date” pour mettre au formée “yyyy-MM-dd” 
+On peut dès le début dans notre schéma mettre la colonne “timestamp” au format “TimestampType” puis utiliser la fonction “from\\\_utc\\\_timestamp” pour lui mettre la bonne Timezone puis utiliser la fonction “to\\\_date” pour mettre au formée “yyyy-MM-dd”
+
 ```
 schema = StructType([
 
@@ -211,7 +211,8 @@ union\_agg = union\_agg.withColumn(
 
    "timestamp", to\_date("timestamp", "yyyy-MM-dd"))
 ```
-Nous avions déjà fait en amont le schema qui avait le timestamp au format DateType() ce qui nous a permi déjà de simplifier la démarche et sans avoir des étapes à transformer le string en timestamp puis de faire le from\_utc\_timestamp 
+
+Nous avions déjà fait en amont le schema qui avait le timestamp au format DateType() ce qui nous a permi déjà de simplifier la démarche et sans avoir des étapes à transformer le string en timestamp puis de faire le from_utc_timestamp
 
 **5.3.4 Calcul de l’indice**
 
@@ -231,11 +232,11 @@ Nous avons utilisé window qui va nous permettre de partitionner sur les “crit
 
 La transformation lag() va être appliquée pour pouvoir accéder à la valeur précédente pour pouvoir faire des comparaisons sur la colonne “value”. Le lag peut-être uniquement utilisé sur un window.
 
-**Faire la moyenne glissante sur 5 valeurs pour éliminer le bruit + ajout nouvelle colonne smoothed\_index**
+**Faire la moyenne glissante sur 5 valeurs pour éliminer le bruit + ajout nouvelle colonne smoothed_index**
 
 **5.4 Stockage du résultat**
 
-**Vérifions la spark UI. Est-ce qu’il y a des calculs qui ont été faits plusieurs fois ?** 
+**Vérifions la spark UI. Est-ce qu’il y a des calculs qui ont été faits plusieurs fois ?**
 
 Oui, les calculs de certains dataframes ont été faits plusieurs fois.
 
@@ -249,7 +250,7 @@ Il est possible d’optimiser avec .cache() et .persist()
 
 **Pourquoi utilisons-nous le format parquet au lieu du csv ?**
 
-Car le CSV n’est pas le plus optimisé. Créer un CSV à chaque exécution remplirait le stockage de la machine rapidement contrairement au format parquet qui permet d’avoir un stockage des donnés plus optimisé. De plus, créer un script pour clear les CSV demanderait de la puissance en plus. 
+Car le CSV n’est pas le plus optimisé. Créer un CSV à chaque exécution remplirait le stockage de la machine rapidement contrairement au format parquet qui permet d’avoir un stockage des donnés plus optimisé. De plus, créer un script pour clear les CSV demanderait de la puissance en plus.
 
 Pour faire simple, utiliser le format parquet est simplement plus optimisé.
 
