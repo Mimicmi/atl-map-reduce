@@ -185,17 +185,20 @@ combined_df = union_agg_age_df.union(
 combined_df.show()
 
 # 5-3.4 Calcul de l’indice
-# Filter only the range of criterion's age of 15-25
 windowSpec = Window.partitionBy("criterion", "variable").orderBy(
     "timestamp")
 
 window_df = combined_df.withColumn("index", lag("value").over(windowSpec))
 
-window_df.show()
+# window_df.orderBy("timestamp", ascending=False).show()
 
-# Utiliser la fonction lag pour obtenir la valeur de l'année précédente
+# moving-average
+window_moving_avg = Window.orderBy(col("timestamp")).rowsBetween(-4, 0)
 
-#5.4 Stockage du résultat
-# union_agg_age_df.write.parquet("Archive/union_agg_age_df.parquet")
+window_average_df = window_df.withColumn(
+    "moving_avg", avg(col("index")).over(window_moving_avg))
 
-#time.sleep(100000)
+# window_average_df.orderBy("timestamp", ascending=False).show()
+
+# Save to parquet
+window_average_df.write.parquet("Archive/window_average_df.parquet")
