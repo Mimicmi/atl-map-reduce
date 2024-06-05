@@ -108,14 +108,14 @@ union = union_df.join(
 # union_agg.write.csv("Archive/union_agg.csv", header=True)
 
 # TODO : DELETE BELOW
-# path_to_delete = "Archive/union_agg.csv/part-00000-34f7cfe9-1f0d-4ef4-9020-902f3de97812-c000.csv"
-# df_to_delete = spark.read.csv(path_to_delete, header=True)
+path_to_delete = "Archive/union_agg.csv/part-00000-34f7cfe9-1f0d-4ef4-9020-902f3de97812-c000.csv"
+df_to_delete = spark.read.csv(path_to_delete, header=True)
 
 # df_to_delete.show()
 
 # 5-3.1 : Comparaison par tranche d’âge
 union_agg_age_df = union_agg
-union_agg_age_df.show()
+# union_agg_age_df.show()
 
 union_agg_age_df = union_agg_age_df.withColumn(
     "variable",
@@ -134,7 +134,7 @@ union_agg_age_df = union_agg_age_df.withColumn("criterion", when(
 
 union_agg_age_df = union_agg_age_df.select(
     "timestamp", "criterion", "variable", "value")
-union_agg_age_df.show()
+# union_agg_age_df.show()
 
 # 5-3.2 : Comparaison par sexe
 union_agg_day_sexe = union.groupBy("timestamp", "sexe").agg(
@@ -152,7 +152,7 @@ union_agg_day_sexe = union_agg_day_sexe.withColumn("criterion", when(
 union_agg_day_sexe = union_agg_day_sexe.select(
     "timestamp", "criterion", "variable", "value")
 
-union_agg_day_sexe.show()
+# union_agg_day_sexe.show()
 
 # 5-3.3 : Comparaison par catégorie
 union_agg_category = union_agg.groupBy(
@@ -168,6 +168,6 @@ union_agg_category = union_agg_category.withColumn("criterion", when(
 union_agg_category = union_agg_category.select(
     "timestamp", "criterion", "variable", "value")
 
-union_agg_category.show()
+# union_agg_category.show()
 
 # time.sleep(100000)
