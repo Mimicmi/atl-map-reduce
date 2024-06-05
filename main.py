@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import split, when, avg, mean, broadcast, from_utc_timestamp, to_utc_timestamp, lag, year, col, lit, expr
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DateType
+from pyspark.sql.functions import split, when, avg, mean, broadcast, from_utc_timestamp, lag, col, to_date
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, TimestampType
 from pyspark.sql.window import Window
 
 spark = SparkSession \
@@ -17,7 +17,7 @@ PATH_2 = "Archive/applications_activity_per_user_per_hour_2.csv"
 
 # Create schema
 schema = StructType([
-    StructField("timestamp", DateType()),
+    StructField("timestamp", TimestampType()),
     StructField("user_id", IntegerType()),
     StructField("age_sexe", StringType()),
     StructField("application", StringType()),
@@ -105,20 +105,14 @@ union = union_df.join(
 
 # union.show()
 
-# union_agg.write.csv("Archive/union_agg.csv", header=True)
-
-# TODO : DELETE BELOW
-path_to_delete = "Archive/union_agg.csv/part-00000-34f7cfe9-1f0d-4ef4-9020-902f3de97812-c000.csv"
-df_to_delete = spark.read.csv(path_to_delete, header=True)
-
-# df_to_delete.show()
 
 # Convert timestamp from DateType to timezone Europe/Paris
-union_agg = df_to_delete
 union_agg = union_agg.withColumn(
     "timestamp", col("timestamp").cast("timestamp"))
 union_agg = union_agg.withColumn(
     "timestamp", from_utc_timestamp(union_agg.timestamp, "Europe/Paris"))
+union_agg = union_agg.withColumn(
+    "timestamp", to_date("timestamp", "yyyy-MM-dd"))
 
 
 # 5-3.1 : Comparaison par tranche d’âge
