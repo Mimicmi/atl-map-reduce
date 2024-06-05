@@ -117,8 +117,8 @@ df_to_delete = spark.read.csv(path_to_delete, header=True)
 union_agg = df_to_delete
 union_agg = union_agg.withColumn(
     "timestamp", col("timestamp").cast("timestamp"))
-union_agg = union_agg.withColumn("timestamp", from_utc_timestamp(
-    to_utc_timestamp(union_agg.timestamp, "Europe/Paris"), "Europe/Paris"))
+union_agg = union_agg.withColumn(
+    "timestamp", from_utc_timestamp(union_agg.timestamp, "Europe/Paris"))
 
 
 # 5-3.1 : Comparaison par tranche d’âge
@@ -185,10 +185,11 @@ combined_df.show()
 
 # 5-3.4 Calcul de l’indice
 # Filter only the range of criterion's age of 15-25
-# Définir une fenêtre pour partitionner par criterion et variable, et ordonner par timestamp
-# windowSpec = Window.partitionBy("criterion", "variable").orderBy("timestamp")
+windowSpec = Window.partitionBy("criterion", "variable").orderBy(
+    "timestamp")
 
-# df_window = combined_df
+window_df = combined_df.withColumn("index", lag("value").over(windowSpec))
 
+window_df.show()
 
 # Utiliser la fonction lag pour obtenir la valeur de l'année précédente
