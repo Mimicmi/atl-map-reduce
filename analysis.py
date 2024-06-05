@@ -1,3 +1,4 @@
+# 5.5 Affichage des courbes de comparaison
 from pyspark.sql import SparkSession
 
 spark = SparkSession \

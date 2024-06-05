@@ -100,12 +100,6 @@ union_agg = union_df_agg.join(broadcast(df_3), on="application", how="left")
 union_agg = union_agg.cache()
 # new_union.show()
 
-union = union_df.join(
-    broadcast(df_3), on="application", how="left")
-
-# union.show()
-
-
 # Convert timestamp from DateType to timezone Europe/Paris
 union_agg = union_agg.withColumn(
     "timestamp", col("timestamp").cast("timestamp"))
