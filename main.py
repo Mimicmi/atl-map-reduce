@@ -1,7 +1,7 @@
-import time
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import split, when, avg, mean, broadcast
+from pyspark.sql.functions import split, when, avg, mean, broadcast, from_utc_timestamp, to_utc_timestamp, lag, year, col, lit, expr
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DateType
+from pyspark.sql.window import Window
 
 spark = SparkSession \
     .builder \
@@ -56,7 +56,7 @@ union_df = union_df.drop('age_sexe')
 
 
 union_df.printSchema()
-union_df.show()
+# union_df.show()
 
 # distinctValuesDF = union_df.select("sexe").distinct().show()
 
@@ -108,10 +108,18 @@ union = union_df.join(
 # union_agg.write.csv("Archive/union_agg.csv", header=True)
 
 # TODO : DELETE BELOW
-# path_to_delete = "Archive/union_agg.csv/part-00000-34f7cfe9-1f0d-4ef4-9020-902f3de97812-c000.csv"
-# df_to_delete = spark.read.csv(path_to_delete, header=True)
+path_to_delete = "Archive/union_agg.csv/part-00000-34f7cfe9-1f0d-4ef4-9020-902f3de97812-c000.csv"
+df_to_delete = spark.read.csv(path_to_delete, header=True)
 
 # df_to_delete.show()
+
+# Convert timestamp from DateType to timezone Europe/Paris
+union_agg = df_to_delete
+union_agg = union_agg.withColumn(
+    "timestamp", col("timestamp").cast("timestamp"))
+union_agg = union_agg.withColumn("timestamp", from_utc_timestamp(
+    to_utc_timestamp(union_agg.timestamp, "Europe/Paris"), "Europe/Paris"))
+
 
 # 5-3.1 : Comparaison par tranche d’âge
 union_agg_age_df = union_agg
@@ -133,11 +141,11 @@ union_agg_age_df = union_agg_age_df.withColumn("criterion", when(
 
 union_agg_age_df = union_agg_age_df.select(
     "timestamp", "criterion", "variable", "value")
-union_agg_age_df.show()
+# union_agg_age_df.show()
 
 # 5-3.2 : Comparaison par sexe
-union_agg_day_sexe = union.groupBy("timestamp", "sexe").agg(
-    mean("time_spent").alias("value"))
+union_agg_day_sexe = union_agg.groupBy("timestamp", "sexe").agg(
+    mean("mean-time-spent").alias("value"))
 
 union_agg_day_sexe = union_agg_day_sexe.orderBy("timestamp", "sexe")
 
@@ -151,7 +159,7 @@ union_agg_day_sexe = union_agg_day_sexe.withColumn("criterion", when(
 union_agg_day_sexe = union_agg_day_sexe.select(
     "timestamp", "criterion", "variable", "value")
 
-union_agg_day_sexe.show()
+# union_agg_day_sexe.show()
 
 # 5-3.3 : Comparaison par catégorie
 union_agg_category = union_agg.groupBy(
@@ -169,4 +177,18 @@ union_agg_category = union_agg_category.select(
 
 # union_agg_category.show()
 
-# time.sleep(100000)
+# Combine all three dataframes
+combined_df = union_agg_age_df.union(
+    union_agg_day_sexe).union(union_agg_category)
+
+combined_df.show()
+
+# 5-3.4 Calcul de l’indice
+# Filter only the range of criterion's age of 15-25
+# Définir une fenêtre pour partitionner par criterion et variable, et ordonner par timestamp
+# windowSpec = Window.partitionBy("criterion", "variable").orderBy("timestamp")
+
+# df_window = combined_df
+
+
+# Utiliser la fonction lag pour obtenir la valeur de l'année précédente
