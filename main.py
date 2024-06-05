@@ -108,7 +108,7 @@ union = union_df.join(
 # union_agg.write.csv("Archive/union_agg.csv", header=True)
 
 # TODO : DELETE BELOW
-path_to_delete = "Archive/union_agg.csv/part-00000-34f7cfe9-1f0d-4ef4-9020-902f3de97812-c000.csv"
+path_to_delete = "Archive/part-00000-34f7cfe9-1f0d-4ef4-9020-902f3de97812-c000.csv"
 df_to_delete = spark.read.csv(path_to_delete, header=True)
 
 # df_to_delete.show()
