@@ -1,3 +1,23 @@
+# Projet - Initialisation
+
+Cloner le projet
+Installer les dépendances :
+pip install -r requirements.txt
+
+## Les fichiers
+
+3 fichiers : main.py, refacto.py, test\_.py
+
+main.py prend les étapes jusqu'à la refactorisation
+refacto.py est la refactorisation de main.py
+test_py sont les tests unitaires liés à refacto.py
+
+## Executer les fichiers
+
+python main.py
+python refacto.py
+pytest
+
 # **5 Etapes**
 
 ## **5.1 Lecture des données**
