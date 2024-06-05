@@ -192,3 +192,6 @@ combined_df.show()
 
 
 # Utiliser la fonction lag pour obtenir la valeur de l'année précédente
+
+#5.4 Stockage du résultat
+union_agg_age_df.write.parquet("Archive/union_agg_age_df.parquet")
