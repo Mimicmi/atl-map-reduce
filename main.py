@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import split, when, avg, mean, broadcast, from_utc_timestamp, to_utc_timestamp, lag, year, col, lit, expr
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DateType
+from pyspark.sql.functions import split, when, avg, mean, broadcast, from_utc_timestamp, lag, col, to_date
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, TimestampType
 from pyspark.sql.window import Window
 
 spark = SparkSession \
@@ -17,7 +17,7 @@ PATH_2 = "Archive/applications_activity_per_user_per_hour_2.csv"
 
 # Create schema
 schema = StructType([
-    StructField("timestamp", DateType()),
+    StructField("timestamp", TimestampType()),
     StructField("user_id", IntegerType()),
     StructField("age_sexe", StringType()),
     StructField("application", StringType()),
@@ -43,7 +43,7 @@ df_2 = spark.read.format("csv").schema(
 
 # Union of the two DF
 union_df = df_1.union(df_2)
-
+union_df = union_df.cache()
 # union_df.show()
 
 # 5 - 2 : Nettoyage des données
@@ -97,7 +97,7 @@ df_3 = spark.read.format("csv").schema(
 
 # Join union_df_agg with the new csv with broadcast of newer csv as it's a little dataframe
 union_agg = union_df_agg.join(broadcast(df_3), on="application", how="left")
-
+union_agg = union_agg.cache()
 # new_union.show()
 
 union = union_df.join(
@@ -105,20 +105,14 @@ union = union_df.join(
 
 # union.show()
 
-# union_agg.write.csv("Archive/union_agg.csv", header=True)
-
-# TODO : DELETE BELOW
-path_to_delete = "Archive/union_agg.csv/part-00000-34f7cfe9-1f0d-4ef4-9020-902f3de97812-c000.csv"
-df_to_delete = spark.read.csv(path_to_delete, header=True)
-
-# df_to_delete.show()
 
 # Convert timestamp from DateType to timezone Europe/Paris
-union_agg = df_to_delete
 union_agg = union_agg.withColumn(
     "timestamp", col("timestamp").cast("timestamp"))
-union_agg = union_agg.withColumn("timestamp", from_utc_timestamp(
-    to_utc_timestamp(union_agg.timestamp, "Europe/Paris"), "Europe/Paris"))
+union_agg = union_agg.withColumn(
+    "timestamp", from_utc_timestamp(union_agg.timestamp, "Europe/Paris"))
+union_agg = union_agg.withColumn(
+    "timestamp", to_date("timestamp", "yyyy-MM-dd"))
 
 
 # 5-3.1 : Comparaison par tranche d’âge
@@ -126,6 +120,8 @@ union_agg_age_df = union_agg
 
 union_agg_age_df = union_agg_age_df.groupBy("timestamp", "age").agg(
     mean("mean-time-spent").alias("value"))
+
+union_agg_age_df = union_agg_age_df.cache()
 
 union_agg_age_df = union_agg_age_df.withColumn(
     "variable",
@@ -147,6 +143,8 @@ union_agg_age_df = union_agg_age_df.select(
 union_agg_day_sexe = union_agg.groupBy("timestamp", "sexe").agg(
     mean("mean-time-spent").alias("value"))
 
+union_agg_day_sexe = union_agg_day_sexe.cache()
+
 union_agg_day_sexe = union_agg_day_sexe.orderBy("timestamp", "sexe")
 
 union_agg_day_sexe = union_agg_day_sexe.withColumn(
@@ -165,6 +163,8 @@ union_agg_day_sexe = union_agg_day_sexe.select(
 union_agg_category = union_agg.groupBy(
     "timestamp", "category").agg(mean("mean-time-spent").alias("value"))
 
+union_agg_category = union_agg_category.cache()
+
 union_agg_category = union_agg_category.withColumn(
     "variable", union_agg_category.category)
 union_agg_category = union_agg_category.withColumnRenamed(
@@ -181,14 +181,24 @@ union_agg_category = union_agg_category.select(
 combined_df = union_agg_age_df.union(
     union_agg_day_sexe).union(union_agg_category)
 
-combined_df.show()
+# combined_df.show()
 
 # 5-3.4 Calcul de l’indice
-# Filter only the range of criterion's age of 15-25
-# Définir une fenêtre pour partitionner par criterion et variable, et ordonner par timestamp
-# windowSpec = Window.partitionBy("criterion", "variable").orderBy("timestamp")
+windowSpec = Window.partitionBy("criterion", "variable").orderBy(
+    "timestamp")
 
-# df_window = combined_df
+window_df = combined_df.withColumn("index", lag("value").over(windowSpec))
 
+# window_df.orderBy("timestamp", ascending=False).show()
 
-# Utiliser la fonction lag pour obtenir la valeur de l'année précédente
+# moving-average
+window_moving_avg = Window.orderBy(col("timestamp")).rowsBetween(-4, 0)
+
+window_average_df = window_df.withColumn(
+    "moving_avg", avg(col("index")).over(window_moving_avg))
+
+window_average_df.orderBy("timestamp", ascending=False).show()
+
+# 5.4 Stockage du résultat
+# Save to parquet
+window_average_df.write.parquet("Archive/window_average_df.parquet")
