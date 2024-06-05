@@ -18,6 +18,13 @@ python main.py
 python refacto.py
 pytest
 
+# ATTENTION
+
+## Bon déroulement de l'exécution du projet
+
+Pour que l'execution puisse marcher, il est important que le dossier "Archive"
+contenant tous les csv soient au root du projet. Ce dernier fait partie du .gitignore
+
 # **5 Etapes**
 
 ## **5.1 Lecture des données**
