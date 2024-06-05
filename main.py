@@ -200,5 +200,6 @@ window_average_df = window_df.withColumn(
 
 # window_average_df.orderBy("timestamp", ascending=False).show()
 
+# 5.4 Stockage du résultat
 # Save to parquet
 window_average_df.write.parquet("Archive/window_average_df.parquet")
